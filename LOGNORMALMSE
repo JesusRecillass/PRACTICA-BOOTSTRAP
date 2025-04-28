@@ -1,0 +1,46 @@
+library("pacman")
+p_load(actuar, dplyr)
+
+#######3.5 Tecnica Bootstrap
+#El error indica que tan bien ajustado esta el modelo
+set.seed(12345)
+
+reclam <- rlnorm(20, meanlog=2.5, sdlog= 2.5)
+bootstrap_mse <- function(data, n_bootstrap){
+  mse_values <- numeric(n_bootstrap)
+  mse_values
+  for (i in 1:n_bootstrap) {
+    sample_data <- sample(data, replace = TRUE)
+    mse_values[i] <- mean((sample_data - mean(sample_data))^2)
+    mean(mse_values)
+  }
+  return((mse_values))
+  
+}
+
+# Estimación del MSE usando bootstrap
+n_bootstrap <- 100000
+mse_samples <- bootstrap_mse(reclam, n_bootstrap)
+
+# Calcular estadísticos
+mse_mean <- mean(mse_samples)
+mse_ci <- quantile(mse_samples, c(0.025, 0.975))
+
+cat("El MSE estimado es:", format(mse_mean, big.mark = ",", digits = 5), "\n")
+cat("Intervalo de confianza al 95%: [", 
+    format(mse_ci[1], big.mark = ",", digits = 5), ",", 
+    format(mse_ci[2], big.mark = ",", digits = 5), "]\n")
+# Gráfica
+plot(density(mse_samples), 
+     main = "Densidad del MSE",
+     xlab = "MSE", ylab = "Densidad",
+     col = "purple", lwd = 2)
+abline(v = mse_mean, col = "red", lwd = 2, lty = 2)
+abline(v = mse_ci[1], col = "black", lwd = 2, lty = 3)
+abline(v = mse_ci[2], col = "black", lwd = 2, lty = 3)
+legend("topright", 
+       legend = c("Densidad Bootstrap", 
+                  paste("Media =", format(mse_mean, digits = 5)), 
+                  "IC 95%"),
+       col = c("purple", "red", "black"), 
+       lty = c(1, 2, 3), lwd = 2)
