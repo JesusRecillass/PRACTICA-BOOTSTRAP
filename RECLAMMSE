@@ -1,0 +1,58 @@
+# Definir los datos proporcionados
+datos <- c(144, 134, 185, 141, 205, 126, 123, 152, 123, 215, 
+           170, 165, 180, 175, 160, 185, 168, 172, 178, 169)
+ 
+# Función para calcular muestras bootstrap del MSE
+bootstrap_mse <- function(data, n_bootstrap) {
+  mse_values <- numeric(n_bootstrap)
+  for (i in 1:n_bootstrap) {
+    sample_data <- sample(data, replace = TRUE)
+    mse_values[i] <- mean((sample_data - mean(sample_data))^2)
+  }
+  return(mse_values)
+}
+ 
+# Configuración del análisis bootstrap
+set.seed(12345)  # Para reproducibilidad
+n_bootstrap <- 100000
+ 
+# Generar muestras bootstrap
+mse_samples <- bootstrap_mse(datos, n_bootstrap)
+ 
+# Calcular estadísticos importantes
+mse_mean <- mean(mse_samples)
+mse_median <- median(mse_samples)
+mse_sd <- sd(mse_samples)
+mse_ci <- quantile(mse_samples, c(0.025, 0.975))
+ 
+# Resultados numéricos
+cat("Análisis Bootstrap del MSE (n =", length(datos), "observaciones)\n")
+cat("-----------------------------------------\n")
+cat("MSE promedio:", format(round(mse_mean, 2), big.mark = ","), "\n")
+cat("Mediana del MSE:", format(round(mse_median, 2), big.mark = ","), "\n")
+cat("Desviación estándar:", format(round(mse_sd, 2), big.mark = ","), "\n")
+cat("Intervalo de confianza al 95%:\n")
+cat("  Límite inferior:", format(round(mse_ci[1], 2), big.mark = ","), "\n")
+cat("  Límite superior:", format(round(mse_ci[2], 2), big.mark = ","), "\n")
+ 
+# Gráfico de densidad mejorado
+library(ggplot2)
+ 
+ggplot(data.frame(MSE = mse_samples), aes(x = MSE)) +
+  geom_density(fill = "blue", alpha = 0.3) +
+  geom_vline(xintercept = mse_mean, color = "red", linetype = "dashed", size = 1) +
+  geom_vline(xintercept = mse_ci, color = "darkgreen", linetype = "dotted", size = 1) +
+  labs(title = "Distribución Bootstrap del MSE",
+       subtitle = paste("Con", n_bootstrap, "réplicas bootstrap"),
+       x = "Error Cuadrático Medio (MSE)",
+       y = "Densidad") +
+  annotate("text", x = mse_mean, y = 0, 
+           label = paste("Media =", round(mse_mean, 2)), 
+           vjust = -1, color = "red") +
+  annotate("text", x = mse_ci[1], y = 0, 
+           label = paste("IC 2.5% =", round(mse_ci[1], 2)), 
+           vjust = -1, color = "darkgreen") +
+  annotate("text", x = mse_ci[2], y = 0, 
+           label = paste("IC 97.5% =", round(mse_ci[2], 2)), 
+           vjust = -1, color = "darkgreen") +
+  theme_minimal()
